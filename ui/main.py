@@ -1,11 +1,12 @@
 import sys
+from abc import abstractmethod,ABC
 from pathlib import Path
 from PySide6.QtCore import QFile
 from PySide6.QtUiTools import QUiLoader
 from PySide6.QtWidgets import QWidget, QPushButton, QTextBrowser, QApplication, QMessageBox
 from loguru import logger
 
-class menuWindow(QWidget):
+class menuWindow(QWidget,ABC):
     def __init__(self, loader):
         super().__init__()
         self.loader = loader
@@ -40,6 +41,9 @@ class menuWindow(QWidget):
         self.ui.show()
         self.ui.activateWindow()
         logger.info("UI窗口已显示并激活")
+        self.bind_button()
+    @abstractmethod
+    def bind_button(self):
         # 定义按钮与方法的映射关系
         button_map = {
             'quit': self.quit_app,
@@ -55,7 +59,6 @@ class menuWindow(QWidget):
             else:
                 logger.warning(f"未找到按钮: {button_name}")
         logger.info("所有按钮绑定完成")
-
     def show_window(self):
         # 检查是否有ui属性且不为None
         if not hasattr(self, 'ui') or self.ui is None:
@@ -72,19 +75,9 @@ class menuWindow(QWidget):
     def console(self):
         text_browser = self.ui.findChild(QTextBrowser, 'textBrowser')
         return text_browser
-
     def button_clicked(self):
         self.console().append("按钮被点击了")
 def main():
-    """
-    程序的主入口点。
-
-    参数:
-    src -- 源文件路径，用于加载UI或其他资源。
-
-    此函数负责初始化应用程序，加载UI，并显示主窗口。
-    如果在执行过程中遇到异常，则退出程序，返回错误码1。
-    """
     try:
         # 创建UI加载器对象
         loader = QUiLoader()
