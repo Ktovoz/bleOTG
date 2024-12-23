@@ -3,6 +3,9 @@ from configobj import ConfigObj
 from loguru import logger
 from PIL import Image
 from io import BytesIO
+import cv2
+import numpy as np
+import time
 
 class AppControl:
     def __init__(self, cfg):
@@ -42,20 +45,52 @@ class AppControl:
         if self.not_contains(response, "http response err"):
             image = Image.open(BytesIO(response.content))
             logger.debug(f"成功截取图片，格式为 {image.format}")
-            image.show()
+            return image
         else:
             rep = requests.get(f'{self.url}/capimgpermission')
             if self.contains(rep, "ok"):
                 logger.debug(f"截图权限申请成功")
                 image = Image.open(BytesIO(rep.content))
                 logger.debug(f"成功截取图片，格式为 {image.format}")
-                image.show()
+                return image
             else:
                 logger.error("截图失败，并且截图权限申请失败")
+                return None
+
+    def real_time_preview(self, fps=20, scale_factor=0.37):
+        """
+        实时预览截图
+        :param fps: 帧率
+        :param scale_factor: 缩放因子，默认为1.0（不缩放）
+        """
+        interval = 1.0 / fps
+        while True:
+            start_time = time.time()
+            image = self.get_image()
+            if image is not None:
+                # 将PIL图像转换为OpenCV格式
+                open_cv_image = cv2.cvtColor(np.array(image), cv2.COLOR_RGB2BGR)
+                original_height, original_width = open_cv_image.shape[:2]
+
+                # 计算新的宽度和高度
+                new_width = int(original_width * scale_factor)
+                new_height = int(original_height * scale_factor)
+
+                # 缩放图像
+                resized_image = cv2.resize(open_cv_image, (new_width, new_height))
+
+                cv2.imshow('Real Time Preview', resized_image)
+                if cv2.waitKey(1) & 0xFF == ord('q'):
+                    break
+            end_time = time.time()
+            elapsed_time = end_time - start_time
+            if elapsed_time < interval:
+                time.sleep(interval - elapsed_time)
+        cv2.destroyAllWindows()
 
 if __name__ == '__main__':
     cfg = ConfigObj('./../config.ini', encoding='utf8')
     appcfg = cfg['app']
     app = AppControl(appcfg)
     app.test_bind()
-    app.get_image()
+    app.real_time_preview()
