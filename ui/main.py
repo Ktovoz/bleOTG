@@ -14,27 +14,48 @@ class menuWindow(QWidget):
         logger.info("主菜单窗口初始化完成")
 
     def initialization(self):
+        # 获取当前文件所在的目录
         base_dir = Path(__file__).resolve().parent
+        logger.debug(f"Base directory: {base_dir}")
+        # 构建UI文件的路径
         ui_file_path = base_dir / 'menu.ui'
+        logger.debug(f"UI file path: {ui_file_path}")
+        # 打开UI文件
         ui_file = QFile(str(ui_file_path))
+        if not ui_file.open(QFile.ReadOnly):
+            logger.error(f"无法打开UI文件: {ui_file_path}")
+            return
+        # 加载UI文件
         self.ui = self.loader.load(ui_file)
+        logger.info("UI文件加载完成")
+        # 设置UI窗口居中显示
         frame_geometry = self.ui.frameGeometry()
         screen_center = self.ui.screen().availableGeometry().center()
         frame_geometry.moveCenter(screen_center)
         self.ui.move(frame_geometry.topLeft())
+        logger.debug("UI窗口已居中显示")
+        # 关闭UI文件
         ui_file.close()
+        # 显示UI窗口并激活
         self.ui.show()
         self.ui.activateWindow()
-        logger.info("UI文件加载完成")
-        # 方法映射
+        logger.info("UI窗口已显示并激活")
+        # 定义按钮与方法的映射关系
         button_map = {
             'quit': self.quit_app,
             'bind': self.button_clicked
         }
-        # 绑定方法
+
+        # 绑定按钮点击事件到相应的方法
         for button_name, handler in button_map.items():
-            self.ui.findChild(QPushButton, button_name).clicked.connect(handler)
-        logger.info("按钮绑定完成")
+            button = self.ui.findChild(QPushButton, button_name)
+            if button is not None:
+                button.clicked.connect(handler)
+                logger.debug(f"按钮 '{button_name}' 已绑定到方法 '{handler.__name__}'")
+            else:
+                logger.warning(f"未找到按钮: {button_name}")
+        logger.info("所有按钮绑定完成")
+
     def show_window(self):
         # 检查是否有ui属性且不为None
         if not hasattr(self, 'ui') or self.ui is None:
