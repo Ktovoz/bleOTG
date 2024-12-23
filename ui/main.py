@@ -3,7 +3,11 @@ from pathlib import Path
 from PySide6.QtCore import QFile
 from PySide6.QtUiTools import QUiLoader
 from PySide6.QtWidgets import QWidget, QPushButton, QTextBrowser, QApplication, QMessageBox
+from configobj import ConfigObj
 from loguru import logger
+
+from framework.configlog import LogSetup
+
 
 class menuWindow(QWidget):
     def __init__(self, loader):
@@ -105,4 +109,6 @@ def main():
         sys.exit(1)
 
 if __name__ == "__main__":
+    configFile = ConfigObj('./../config.ini', encoding='utf8')
+    LogSetup(config=configFile['logger'])
     main()
