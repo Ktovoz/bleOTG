@@ -1,0 +1,7 @@
+PySide6
+configobj
+loguru
+requests
+opencv-python
+numpy
+pillow
